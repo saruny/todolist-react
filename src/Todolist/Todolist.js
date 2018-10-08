@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import {Input ,Row, Col, Table,Card,Layout,Breadcrumb, Popconfirm, Form,Alert } from 'antd';
+import {Input ,Row, Col, Table,Card,Layout,Breadcrumb, Popconfirm, Form,Divider,Modal, Button  } from 'antd';
 const {Content} = Layout;
 
 const FormItem = Form.Item;
@@ -15,8 +15,11 @@ const EditableFormRow = Form.create()(EditableRow);
 class EditableCell extends React.Component {
   state = {
     editing: false,
+    modal:false,
+    editText:''
   }
 
+  
   componentDidMount() {
     if (this.props.editable) {
       document.addEventListener('click', this.handleClickOutside, true);
@@ -119,7 +122,39 @@ class Todolist extends Component {
     },{
       title: 'operation',
       dataIndex: 'operation',
-      render: (text, record) => {
+      render: (text, record) => (
+        <span>
+          <a href="javascript:;" onClick={()=>this.OpenEditModal(record)}>Edit</a>
+          <Modal
+              title="Basic Modal"
+              visible={this.state.modal}
+              onOk={this.handleOk}
+              onCancel={this.handleCancel}
+            >
+            <Row>
+               <Col span={24}>
+               <label>Id : {this.state.editId}</label>
+               </Col>
+            </Row>
+            <br/>
+            <Row>
+               <Col span={2}>
+               <label>Text </label>
+               </Col>
+               <Col span={22}>
+               <Input value={this.state.editText} onChange={e => this.onTodoChange(e.target.value)}/>
+               </Col>
+             
+            </Row>
+
+            </Modal>
+            <Divider type="vertical" />
+          <Popconfirm title="Sure to delete?" onConfirm={() => this.handleDelete(record.key)}>
+          <a href="javascript:;">Delete</a>
+        </Popconfirm>
+        </span>
+      )
+      /*=> {
         return (
           this.state.dataSource.length >= 1
             ? (
@@ -128,20 +163,52 @@ class Todolist extends Component {
               </Popconfirm>
             ) : null
         );
-      },
+      },*/
     }];
 
     this.state = {
       dataSource: [],
       count: 0,
+      editText:'',
+      editId:''
     };
   }
-
+  onTodoChange(value){
+    this.setState({
+      editText: value
+    });
+}
+  handleOk = (e) => {
+ 
+    this.setState({
+      modal: false,
+    });
+    const newData = [...this.state.dataSource];
+    const index = newData.findIndex(item => this.state.editId === item.key);
+    newData[index].name = this.state.editText;
+   
+    this.setState({ dataSource: newData });
+  }
+  handleCancel = (e) => {
+    console.log(e);
+    this.setState({
+      modal: false,
+    });
+  }
   handleDelete = (key) => {
     const dataSource = [...this.state.dataSource];
     this.setState({ dataSource: dataSource.filter(item => item.key !== key) });
   }
-
+  OpenEditModal = (row) => {
+    
+    this.setState({
+      modal: true,
+    });
+    const newData = [...this.state.dataSource];
+    const index = newData.findIndex(item => row.key === item.key);
+    this.state.editId = row.key;
+    this.state.editText = row.name;
+  }
   handleAdd = (e) => {
     var text = e.target.value;
     if(text != ''){
@@ -225,7 +292,9 @@ class Todolist extends Component {
         />
       </Card>   
       </div>
+ 
     </Content>
+
     );
 }
 }
